@@ -5,11 +5,8 @@ import os  # Add this import
 
 app = Flask(__name__)
 
-# Get the path to the Desktop dynamically
-desktop_path = os.path.join(os.path.expanduser("~"), "Desktop", "tourism.db")
-
-# Configure the database URI to point to the Desktop location
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{desktop_path}"
+# Configure the database URI to use a relative path inside the project
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///tourism.db"
 app.config['SECRET_KEY'] = 'mysecret'
 db = SQLAlchemy(app)
 
@@ -87,7 +84,5 @@ def complaint():
 def helplines():
     return render_template('helplines.html')
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+with app.app_context():
+    db.create_all()

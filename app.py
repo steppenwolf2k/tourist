@@ -3,10 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 import os  # Add this import
 
+import os
 app = Flask(__name__)
 
-# Configure the database URI to use a relative path inside the project
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///tourism.db"
+# Use an absolute path for SQLite database in a writable directory for serverless environment
+db_path = os.path.join('/tmp', 'tourism.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SECRET_KEY'] = 'mysecret'
 db = SQLAlchemy(app)
 
@@ -63,8 +65,12 @@ def review():
         user_id = 1  # Replace with session-based user authentication
         new_review = Review(place_name=place_name, rating=rating, review_text=review_text, user_id=user_id)
         db.session.add(new_review)
-        db.session.commit()
-        flash('Review submitted successfully!', 'success')
+        try:
+            db.session.commit()
+            flash('Review submitted successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error submitting review: {str(e)}', 'danger')
         return redirect(url_for('index'))
     return render_template('review.html')
 
@@ -75,8 +81,12 @@ def complaint():
         user_id = 1  # Replace with session-based user authentication
         new_complaint = Complaint(complaint_text=complaint_text, user_id=user_id)
         db.session.add(new_complaint)
-        db.session.commit()
-        flash('Complaint submitted successfully!', 'success')
+        try:
+            db.session.commit()
+            flash('Complaint submitted successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error submitting complaint: {str(e)}', 'danger')
         return redirect(url_for('index'))
     return render_template('complaint.html')
 
@@ -84,5 +94,9 @@ def complaint():
 def helplines():
     return render_template('helplines.html')
 
-with app.app_context():
-    db.create_all()
+# Create tables only if they don't exist, but avoid running on every invocation in serverless
+def init_db():
+    with app.app_context():
+        db.create_all()
+
+init_db()

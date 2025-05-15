@@ -1,7 +1,7 @@
 import sqlite3
 
 # Specify the path for the database
-db_path = r"C:\Users\DELL\Desktop\tourism.db"  # Or any other location
+db_path = r".\tourism.db"  # Or any other location
 
 try:
     # Try to create a connection and create the database file
